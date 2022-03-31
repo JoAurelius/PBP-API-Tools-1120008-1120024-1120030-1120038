@@ -35,8 +35,9 @@ func main() {
 	s := gocron.NewScheduler(time.UTC)
 	s.Every(30).Seconds().Do(func() {
 		go SendEmail()
-		time.Sleep(500 * time.Millisecond)
-
+		go log.Println("Sedang mengirim email...")
+		time.Sleep(1000 * time.Millisecond)
+		log.Println("Email terkirim")
 	}) // Every 30 seconds
 	s.StartAsync()
 	s.StartBlocking()
