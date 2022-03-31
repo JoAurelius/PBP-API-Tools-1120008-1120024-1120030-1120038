@@ -3,14 +3,16 @@ package main
 import (
 	"context"
 	"database/sql"
+
+	//"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/go-co-op/gocron"
 	"github.com/go-redis/redis/v8"
+	_ "github.com/go-sql-driver/mysql"
 	"gopkg.in/gomail.v2"
 )
 
@@ -43,7 +45,7 @@ func main() {
 //mail
 func SendEmail() {
 
-	var list []User = getUser()
+	var list []User = GetAllUsers()
 	d := gomail.NewDialer("smtp.example.com", 587, "stevianianggila60@gmail.com", "NakNik919")
 
 	m := gomail.NewMessage()
@@ -121,9 +123,10 @@ func setUser(users []User) {
 	}
 }
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
+func GetAllUsers() []User {
 
 	var users []User
+	users = getUser()
 
 	if users == nil {
 		db := connect()
@@ -133,8 +136,8 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query(query)
 		if err != nil {
 			log.Println(err)
-			log.Println(w, 400, "Query Error")
-			return
+			log.Println(400, "Query Error")
+			return nil
 		}
 
 		var user User
@@ -142,12 +145,13 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			if err := rows.Scan(&user.id, &user.Email, &user.Name); err != nil {
 				log.Println(err.Error())
-				log.Println(w, 400, "gagal get")
-				return
+				log.Println(400, "gagal get")
+				return nil
 			} else {
 				users = append(users, user)
 			}
 		}
 		setUser(users)
 	}
+	return users
 }
