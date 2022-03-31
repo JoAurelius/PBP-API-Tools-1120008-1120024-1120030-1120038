@@ -46,7 +46,7 @@ func main() {
 func SendEmail() {
 
 	var list []User = GetAllUsers()
-	d := gomail.NewDialer("smtp.example.com", 587, "stevianianggila60@gmail.com", "NakNik919")
+	d := gomail.NewDialer("smtp.gmail.com", 587, "stevianianggila60@gmail.com", "NakNik919")
 
 	m := gomail.NewMessage()
 	for _, r := range list {
@@ -61,19 +61,6 @@ func SendEmail() {
 		m.Reset()
 	}
 }
-
-// func SendMail() {
-// 	m := gomail.NewMessage()
-// 	m.SetHeader("From", "from@example.com")
-// 	m.SetHeader("To", "to@example.com")
-// 	m.SetHeader("Subject", "Hello!")
-// 	m.SetBody("text/plain", "Hello!")
-
-// 	d := gomail.Dialer{Host: "localhost", Port: 587}
-// 	if err := d.DialAndSend(m); err != nil {
-// 		panic(err)
-// 	}
-// }
 
 //redis
 func getUser() []User {
