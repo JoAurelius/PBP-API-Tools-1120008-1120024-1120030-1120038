@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,6 +13,20 @@ import (
 	"github.com/go-redis/redis/v8"
 	"gopkg.in/gomail.v2"
 )
+
+type User struct {
+	id    int    `json:"id"`
+	Email string `json"email`
+	Name  string `json"name`
+}
+
+func connect() *sql.DB {
+	db, err := sql.Open("mysql", "root:@tcp(localhost:3306)/db_latihan_tools?parseTime=true&loc=Asia%2FJakarta")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db
+}
 
 func main() {
 	// Connect to redis
@@ -27,39 +42,36 @@ func main() {
 
 //mail
 func SendEmail() {
-	d := gomail.NewDialer("smtp.example.com", 587, "user", "123456")
-	n, err := d.Dial()
-	if err != nil {
-		panic(err)
-	}
 
 	var list []User = getUser()
+	d := gomail.NewDialer("smtp.example.com", 587, "stevianianggila60@gmail.com", "NakNik919")
 
 	m := gomail.NewMessage()
 	for _, r := range list {
-		m.SetHeader("From", "no-reply@example.com")
+		m.SetHeader("From", "stevianianggila60@gmail.com")
 		m.SetAddressHeader("To", r.Email, r.Name)
 		m.SetHeader("Subject", "Newsletter #1")
 		m.SetBody("text/html", fmt.Sprintf("Hello %s!", r.Name))
-		if err := gomail.Send(n, m); err != nil {
-			log.Printf("Could not send email to %q: %v", r.Email, err)
+		if err := d.DialAndSend(m); err != nil {
+			fmt.Print(err)
+			panic(err)
 		}
 		m.Reset()
 	}
 }
 
-func SendMail() {
-	m := gomail.NewMessage()
-	m.SetHeader("From", "from@example.com")
-	m.SetHeader("To", "to@example.com")
-	m.SetHeader("Subject", "Hello!")
-	m.SetBody("text/plain", "Hello!")
+// func SendMail() {
+// 	m := gomail.NewMessage()
+// 	m.SetHeader("From", "from@example.com")
+// 	m.SetHeader("To", "to@example.com")
+// 	m.SetHeader("Subject", "Hello!")
+// 	m.SetBody("text/plain", "Hello!")
 
-	d := gomail.Dialer{Host: "localhost", Port: 587}
-	if err := d.DialAndSend(m); err != nil {
-		panic(err)
-	}
-}
+// 	d := gomail.Dialer{Host: "localhost", Port: 587}
+// 	if err := d.DialAndSend(m); err != nil {
+// 		panic(err)
+// 	}
+// }
 
 //redis
 func getUser() []User {
@@ -84,8 +96,6 @@ func getUser() []User {
 	return users
 }
 
-var client *redis.Client
-
 func setUser(users []User) {
 	converted, err := json.Marshal(users)
 	if err != nil {
@@ -93,7 +103,7 @@ func setUser(users []User) {
 		return
 	}
 
-	client = redis.NewClient(&redis.Options{
+	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
@@ -114,13 +124,12 @@ func setUser(users []User) {
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	var users []User
-	users = getUser()
 
 	if users == nil {
 		db := connect()
 		defer db.Close()
 
-		query := "Select id, email, nama from user"
+		query := "Select id, email, nama from users"
 		rows, err := db.Query(query)
 		if err != nil {
 			log.Println(err)
